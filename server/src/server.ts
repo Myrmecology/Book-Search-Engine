@@ -39,10 +39,10 @@ async function startApolloServer() {
   await server.start();
   
   // Apply middleware to Express
-  server.applyMiddleware({ app });
+  server.applyMiddleware({ app: app as any });
 
   // Serve React app for any route not defined (client-side routing)
-  app.get('*', (req, res) => {
+  app.get('*', (_req, res) => {
     res.sendFile(path.join(__dirname, '../client/build/index.html'));
   });
 

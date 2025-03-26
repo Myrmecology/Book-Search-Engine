@@ -5,16 +5,21 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Define a type for decoded token
-interface JwtPayload {
+export interface JwtPayload {
   _id: unknown;
   username: string;
   email: string;
 }
 
+// Interface for authenticated request
+export interface AuthRequest extends Request {
+  user?: JwtPayload;
+}
+
 // Middleware function for authentication with GraphQL
 export const authMiddleware = ({ req }: { req: Request }) => {
   // Allows token to be sent via req.body, req.query, or headers
-  let token = req.body.token || req.query.token || req.headers.authorization;
+  let token = req.body?.token || req.query?.token || req.headers.authorization;
 
   // ["Bearer", "<tokenvalue>"]
   if (req.headers.authorization) {
@@ -50,7 +55,7 @@ export const signToken = (username: string, email: string, _id: unknown) => {
 };
 
 // Keep the original middleware for REST endpoints if needed
-export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
   if (authHeader) {
