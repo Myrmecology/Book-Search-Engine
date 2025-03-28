@@ -1,9 +1,15 @@
 import express from 'express';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
 import { ApolloServer } from 'apollo-server-express';
 import db from './config/connection.js';
 import { typeDefs, resolvers } from './schemas/index.js';
 import { authMiddleware } from './services/auth.js';
+
+// Fix for __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Port configuration
 const PORT = process.env.PORT || 3001;
@@ -25,7 +31,8 @@ async function startApolloServer() {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    context: authMiddleware
+    context: authMiddleware,
+    cache: 'bounded', // Add bounded cache to prevent DOS warning
   });
 
   // Start the Apollo Server
@@ -39,12 +46,12 @@ async function startApolloServer() {
   
   // Serve static assets in production
   if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../client/build')));
+    app.use(express.static(path.join(__dirname, '../../client/build')));
   }
   
   // Wildcard route to serve React app
   app.get('*', (_req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build/index.html'));
+    res.sendFile(path.join(__dirname, '../../client/build/index.html'));
   });
   
   // Connect to the database and start the server
