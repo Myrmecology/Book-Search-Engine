@@ -8,8 +8,7 @@ import { typeDefs, resolvers } from './schemas/index.js';
 import { authMiddleware } from './services/auth.js';
 
 // Fix for __dirname in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.resolve();
 
 // Port configuration
 const PORT = process.env.PORT || 3001;
