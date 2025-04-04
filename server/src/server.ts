@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
+import cors from 'cors'; // Add CORS import
 import { ApolloServer } from 'apollo-server-express';
 import db from './config/connection.js';
 import { typeDefs, resolvers } from './schemas/index.js';
@@ -16,6 +17,9 @@ const PORT = process.env.PORT || 3001;
 
 // Create Express application
 const app = express();
+
+// Enable CORS for all requests
+app.use(cors());
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
