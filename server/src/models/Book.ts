@@ -11,7 +11,7 @@ export interface BookDocument extends Document {
 }
 
 // Define the book schema for the Book collection
-const bookSchema = new Schema<BookDocument>({
+export const bookSchema = new Schema<BookDocument>({
   authors: [
     {
       type: String,

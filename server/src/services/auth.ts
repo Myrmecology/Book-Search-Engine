@@ -1,8 +1,22 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+// Get the directory name
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from the root .env file
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+// Verify that JWT_SECRET_KEY is set
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
+if (!JWT_SECRET_KEY) {
+  console.error('JWT_SECRET_KEY is not set in environment variables');
+  // Don't throw error here to allow server to start, but authentication will fail
+}
 
 // Define a type for decoded token
 export interface JwtPayload {
@@ -33,13 +47,13 @@ export const authMiddleware = ({ req }: { req: Request }) => {
 
   try {
     // Verify token and get user data out of it
-    const secretKey = process.env.JWT_SECRET_KEY || '';
-    const { _id, username, email } = jwt.verify(token, secretKey) as JwtPayload;
+    if (!JWT_SECRET_KEY) throw new Error('JWT_SECRET_KEY is not configured');
+    const { _id, username, email } = jwt.verify(token, JWT_SECRET_KEY) as JwtPayload;
     
     // Add user data to request object
     (req as any).user = { _id, username, email };
-  } catch {
-    console.log('Invalid token');
+  } catch (err) {
+    console.log('Invalid token', err);
   }
 
   // Return updated request object
@@ -49,26 +63,34 @@ export const authMiddleware = ({ req }: { req: Request }) => {
 // Function to generate JWT token
 export const signToken = (username: string, email: string, _id: unknown) => {
   const payload = { username, email, _id };
-  const secretKey = process.env.JWT_SECRET_KEY || '';
+  
+  if (!JWT_SECRET_KEY) {
+    throw new Error('JWT_SECRET_KEY is not configured');
+  }
 
-  return jwt.sign(payload, secretKey, { expiresIn: '1h' });
+  return jwt.sign(payload, JWT_SECRET_KEY, { expiresIn: '1h' });
 };
 
 // Keep the original middleware for REST endpoints if needed
-export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
 
   if (authHeader) {
     const token = authHeader.split(' ')[1];
-    const secretKey = process.env.JWT_SECRET_KEY || '';
+    
+    if (!JWT_SECRET_KEY) {
+      res.status(500).json({ message: 'Server configuration error' });
+      return;
+    }
 
-    jwt.verify(token, secretKey, (err, user) => {
+    jwt.verify(token, JWT_SECRET_KEY, (err, user) => {
       if (err) {
-        return res.sendStatus(403); // Forbidden
+        res.sendStatus(403); // Forbidden
+        return;
       }
 
       req.user = user as JwtPayload;
-      return next();
+      next();
     });
   } else {
     res.sendStatus(401); // Unauthorized

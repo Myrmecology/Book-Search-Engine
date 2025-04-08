@@ -1,3 +1,6 @@
+import dotenv from 'dotenv'; // Import dotenv to load .env variables
+dotenv.config(); // Load environment variables from the .env file
+
 import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
