@@ -7,7 +7,7 @@ import Navbar from './components/Navbar';
 
 // Create HTTP link for GraphQL endpoint
 const httpLink = createHttpLink({
-  uri: 'http://localhost:3001/graphql',
+  uri: '/graphql',
 });
 
 // Create auth link to attach JWT token to requests
